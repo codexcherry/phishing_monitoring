@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Model Monitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="icon">🎣</span>
+                <h1>Phishing<span class="highlight">Monitor</span></h1>
+            </div>
+            <div class="status-badge" id="system-status">
+                <span class="dot"></span> System Healthy
+            </div>
+        </header>
+
+        <main>
+            <aside class="sidebar">
+                <div class="card control-panel">
+                    <h2>Controls</h2>
+                    <div class="form-group">
+                        <label>Batch Size</label>
+                        <input type="range" id="batch-size" min="100" max="1000" value="500" step="50">
+                        <span id="batch-size-val">500</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Inject Drift</label>
+                        <select id="drift-type">
+                            <option value="none">None (Normal)</option>
+                            <option value="data_drift">Data Drift (URL Length)</option>
+                            <option value="concept_drift">Concept Drift (Attack Pattern)</option>
+                        </select>
+                    </div>
+                    <button id="process-btn" class="btn-primary">Process Next Batch</button>
+                </div>
+
+                <div class="card stats-panel">
+                    <h2>Model Stats</h2>
+                    <div class="stat-item">
+                        <span class="label">Status</span>
+                        <span class="value" id="model-status">Active</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">Ref Data Size</span>
+                        <span class="value" id="ref-size">-</span>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="dashboard-content">
+                <!-- Drift Analysis Section -->
+                <div class="card chart-card full-width">
+                    <h3>Drift Analysis (P-Values)</h3>
+                    <div id="drift-pvalue-chart"></div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="card chart-card">
+                        <h3>URL Length Distribution</h3>
+                        <div id="url-len-chart"></div>
+                    </div>
+                    <div class="card chart-card">
+                        <h3>Special Characters</h3>
+                        <div id="special-char-chart"></div>
+                    </div>
+                </div>
+
+                <div class="card logs-panel">
+                    <h3>Activity Log</h3>
+                    <div class="logs-container" id="activity-log">
+                        <!-- Logs will appear here -->
+                        <div class="log-entry info">
+                            <span class="time">System</span>
+                            <span class="msg">Dashboard initialized. Waiting for data...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+
+</html>
