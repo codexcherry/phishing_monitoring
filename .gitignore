@@ -44,6 +44,7 @@ Thumbs.db
 # Project specific
 models/*.pkl
 models/*.csv
+!models/reference_data.csv
 data/*.csv
 !data/DOWNLOAD_INSTRUCTIONS.md
 
