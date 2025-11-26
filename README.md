@@ -16,6 +16,7 @@ In cybersecurity, attackers constantly evolve their tactics (e.g., using new TLD
 *   **Drift Detection Engine**:
     *   **Numerical Features**: KS-Test (Kolmogorov-Smirnov).
     *   **Categorical Features**: Chi-Square Test.
+*   **Interactive Web Dashboard**: A premium Flask-based dashboard to visualize drift and control simulations.
 *   **Automated Pipeline**: Seamless integration of training, monitoring, and retraining.
 *   **Detailed Documentation**: In-depth explanation of drift concepts in `docs/`.
 
@@ -29,12 +30,16 @@ phishing/
 │   ├── phishing_model.pkl               # Trained Random Forest model
 │   └── reference_data.csv               # Baseline data for drift comparison
 ├── src/
+│   ├── web/
+│   │   ├── static/                      # CSS and JS assets
+│   │   ├── templates/                   # HTML templates
+│   │   └── app.py                       # Flask application entry point
 │   ├── data_generator.py                # Generates synthetic normal & drifted data
 │   ├── drift_detector.py                # Statistical tests implementation
 │   ├── monitor.py                       # Main production simulation loop
 │   ├── retrain.py                       # Retraining logic
 │   └── train.py                         # Initial model training script
-├── run_demo.py                          # Master script to run the full demo
+├── run_demo.py                          # CLI script to run the full demo
 ├── requirements.txt                     # Python dependencies
 └── README.md                            # This file
 ```
@@ -49,15 +54,25 @@ phishing/
 
 ## ⚡ Usage
 
-### Quick Start (Synthetic Data)
+### 1. Run the Web Dashboard (Recommended)
 
-To see the entire system in action with synthetic data, run the demo script:
+Start the Flask application to interactively monitor the model and inject drift:
+
+```bash
+python src/web/app.py
+```
+
+Then open your browser and navigate to: `http://localhost:5000`
+
+### 2. Quick Start (CLI Demo)
+
+To see the entire system in action via the command line with synthetic data:
 
 ```bash
 python run_demo.py
 ```
 
-### Using Real Phishing Data
+### 3. Using Real Phishing Data
 
 To use the Kaggle Phishing Site URLs dataset (549,346 URLs):
 
@@ -74,7 +89,7 @@ To use the Kaggle Phishing Site URLs dataset (549,346 URLs):
 
 3. **Run the dashboard**:
    ```bash
-   python -m streamlit run src/app.py
+   python src/web/app.py
    ```
 
 ### What happens when you run the demo?
