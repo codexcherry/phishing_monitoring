@@ -11,8 +11,12 @@ from src.monitor import ModelMonitor
 
 app = Flask(__name__)
 
-# Initialize Monitor
-monitor = ModelMonitor(reference_data_path='models/reference_data.csv')
+# Get the project root directory (two levels up from src/web)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+
+# Initialize Monitor with absolute path
+reference_data_path = os.path.join(PROJECT_ROOT, 'models', 'reference_data.csv')
+monitor = ModelMonitor(reference_data_path=reference_data_path)
 
 @app.route('/')
 def index():
@@ -72,4 +76,5 @@ def process_batch():
     return jsonify(response)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Run on 0.0.0.0 to make accessible from outside
+    app.run(debug=True, host='0.0.0.0', port=5000)
