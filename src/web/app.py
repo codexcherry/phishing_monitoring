@@ -8,6 +8,9 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from src.monitor import ModelMonitor
+from src.feature_extractor import URLFeatureExtractor
+import joblib
+import numpy as np
 
 app = Flask(__name__)
 
@@ -15,8 +18,21 @@ app = Flask(__name__)
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
 # Initialize Monitor with absolute path
+# Initialize Monitor with absolute path
 reference_data_path = os.path.join(PROJECT_ROOT, 'models', 'reference_data.csv')
 monitor = ModelMonitor(reference_data_path=reference_data_path)
+
+# Load Model
+model_path = os.path.join(PROJECT_ROOT, 'models', 'phishing_model.pkl')
+try:
+    phishing_model = joblib.load(model_path)
+    print(f"Model loaded from {model_path}")
+except Exception as e:
+    print(f"Error loading model: {e}")
+    phishing_model = None
+
+# Initialize Feature Extractor
+extractor = URLFeatureExtractor()
 
 @app.route('/')
 def index():
@@ -73,7 +89,44 @@ def process_batch():
         
     response = clean_numpy(response)
     
+    response = clean_numpy(response)
+    
     return jsonify(response)
+
+@app.route('/api/predict', methods=['POST'])
+def predict():
+    """Predicts if a URL is phishing or legitimate."""
+    if phishing_model is None:
+        return jsonify({'error': 'Model not loaded'}), 500
+        
+    data = request.json
+    url = data.get('url')
+    
+    if not url:
+        return jsonify({'error': 'No URL provided'}), 400
+        
+    try:
+        # Extract features
+        features = extractor.extract_features(url)
+        
+        # Convert to DataFrame for prediction (expected by model)
+        features_df = pd.DataFrame([features])
+        
+        # Predict
+        prediction = phishing_model.predict(features_df)[0]
+        probability = phishing_model.predict_proba(features_df)[0][1] # Probability of class 1 (Phishing)
+        
+        result = {
+            'url': url,
+            'is_phishing': bool(prediction),
+            'probability': float(probability),
+            'features': features
+        }
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     # Run on 0.0.0.0 to make accessible from outside

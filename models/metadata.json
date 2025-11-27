@@ -1,7 +1,7 @@
 {
   "data_source": "real",
-  "sample_size": 2000,
-  "train_size": 1600,
-  "test_size": 400,
-  "test_accuracy": 0.9175
+  "sample_size": 3021,
+  "train_size": 2416,
+  "test_size": 605,
+  "test_accuracy": 0.9338842975206612
 }

@@ -44,6 +44,17 @@
                     <button id="process-btn" class="btn-primary">Process Next Batch</button>
                 </div>
 
+                <div class="card control-panel">
+                    <h2>Check URL</h2>
+                    <div class="form-group">
+                        <input type="text" id="url-input" placeholder="Enter URL to check..."
+                            style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #333; background: #222; color: #fff;">
+                        <button id="check-url-btn" class="btn-primary" style="width: 100%;">Check Phishing</button>
+                    </div>
+                    <div id="prediction-result"
+                        style="margin-top: 10px; font-weight: bold; text-align: center; min-height: 20px;"></div>
+                </div>
+
                 <div class="card stats-panel">
                     <h2>Model Stats</h2>
                     <div class="stat-item">

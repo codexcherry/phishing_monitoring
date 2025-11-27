@@ -45,6 +45,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Check URL Action
+    const checkUrlBtn = document.getElementById('check-url-btn');
+    const urlInput = document.getElementById('url-input');
+    const predictionResult = document.getElementById('prediction-result');
+
+    checkUrlBtn.addEventListener('click', async () => {
+        const url = urlInput.value.trim();
+        if (!url) {
+            alert('Please enter a URL');
+            return;
+        }
+
+        checkUrlBtn.disabled = true;
+        checkUrlBtn.textContent = 'Checking...';
+        predictionResult.textContent = '';
+        predictionResult.className = '';
+
+        try {
+            const response = await fetch('/api/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                predictionResult.textContent = `Error: ${data.error}`;
+                predictionResult.style.color = '#ef4444';
+            } else {
+                const isPhishing = data.is_phishing;
+                const prob = (data.probability * 100).toFixed(2);
+
+                if (isPhishing) {
+                    predictionResult.textContent = `⚠️ PHISHING DETECTED (${prob}%)`;
+                    predictionResult.style.color = '#ef4444';
+                    addLog(`🔍 Checked URL: ${url} -> PHISHING`, 'error');
+                } else {
+                    predictionResult.textContent = `✅ Legitimate URL (${(100 - prob).toFixed(2)}% Safe)`;
+                    predictionResult.style.color = '#10b981';
+                    addLog(`🔍 Checked URL: ${url} -> Safe`, 'success');
+                }
+            }
+        } catch (err) {
+            predictionResult.textContent = `Network Error: ${err.message}`;
+            predictionResult.style.color = '#ef4444';
+        } finally {
+            checkUrlBtn.disabled = false;
+            checkUrlBtn.textContent = 'Check Phishing';
+        }
+    });
+
     async function fetchStats() {
         try {
             const res = await fetch('/api/stats');

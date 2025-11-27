@@ -14,6 +14,9 @@ class URLFeatureExtractor:
             r'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])'
         )
         
+        self.suspicious_tlds = ['.top', '.xyz', '.info', '.club', '.live', '.online', '.site', '.cn', '.ru']
+        self.suspicious_keywords = ['login', 'secure', 'account', 'update', 'verify', 'signin', 'banking', 'confirm', 'wallet']
+        
     def extract_features(self, url):
         """
         Extract features from a single URL.
@@ -35,6 +38,16 @@ class URLFeatureExtractor:
         
         # 4. HTTPS Token
         features['https_token'] = 1 if url.startswith('https://') else 0
+        
+        # 5. Suspicious TLD
+        parsed = urlparse(url)
+        hostname = parsed.netloc if parsed.netloc else parsed.path
+        if '/' in hostname:
+            hostname = hostname.split('/')[0]
+        features['is_suspicious_tld'] = 1 if any(hostname.endswith(tld) for tld in self.suspicious_tlds) else 0
+        
+        # 6. Suspicious Keywords
+        features['has_suspicious_keyword'] = 1 if any(keyword in url.lower() for keyword in self.suspicious_keywords) else 0
         
         return features
     

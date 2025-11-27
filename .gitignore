@@ -53,3 +53,11 @@ data/*.csv
 
 # Environment
 .env
+
+# Agent
+.agent/
+
+# Temporary scripts
+debug_prediction.py
+test_prediction_internal.py
+verify_prediction.py
