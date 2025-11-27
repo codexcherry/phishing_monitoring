@@ -20,6 +20,10 @@ In cybersecurity, attackers constantly evolve their tactics (e.g., using new TLD
 *   **Automated Pipeline**: Seamless integration of training, monitoring, and retraining.
 *   **Detailed Documentation**: In-depth explanation of drift concepts in `docs/`.
 
+## 📊 Sample Output
+
+![Dashboard Output](output.png)
+
 ## 📂 Project Structure
 
 ```
