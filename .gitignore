@@ -4,33 +4,17 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-.venv/
-ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
+dist/
+build/
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
 
-# pyenv
-.python-version
-
-# IDEs
+# IDE
 .vscode/
 .idea/
 *.swp
@@ -42,22 +26,19 @@ wheels/
 Thumbs.db
 
 # Project specific
+*.pkl
 models/*.pkl
-models/*.csv
-!models/reference_data.csv
-data/*.csv
-!data/DOWNLOAD_INSTRUCTIONS.md
+models/reference_data.csv
+models/metadata.json
+
+# Data files (large)
+*.csv
+!data/*.csv
+cybersecurity_extraction.csv
 
 # Logs
 *.log
 
-# Environment
+# Environment variables
 .env
-
-# Agent
-.agent/
-
-# Temporary scripts
-debug_prediction.py
-test_prediction_internal.py
-verify_prediction.py
+.env.local

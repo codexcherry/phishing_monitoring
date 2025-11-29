@@ -9,6 +9,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')
 
 from src.monitor import ModelMonitor
 from src.feature_extractor import URLFeatureExtractor
+from src.serq_api import SERQAPIClient
+from src.url_validator import URLValidator
 import joblib
 import numpy as np
 
@@ -33,6 +35,14 @@ except Exception as e:
 
 # Initialize Feature Extractor
 extractor = URLFeatureExtractor()
+
+# Initialize SERQ API Client
+# SERQ API key - can be set via environment variable SERQ_API_KEY or passed here
+SERQ_API_KEY = os.getenv('SERQ_API_KEY', '775bf88d18658f9e3b81d9766ee63b77e7dc88ad9f873519751d25c180558ae2')
+serq_client = SERQAPIClient(api_key=SERQ_API_KEY)
+
+# Initialize URL Validator
+url_validator = URLValidator(timeout=5)
 
 @app.route('/')
 def index():
@@ -95,7 +105,10 @@ def process_batch():
 
 @app.route('/api/predict', methods=['POST'])
 def predict():
-    """Predicts if a URL is phishing or legitimate."""
+    """
+    Predicts if a URL is phishing or legitimate.
+    Uses SERQ API for real-time reputation checking first, then falls back to model prediction.
+    """
     if phishing_model is None:
         return jsonify({'error': 'Model not loaded'}), 500
         
@@ -106,20 +119,98 @@ def predict():
         return jsonify({'error': 'No URL provided'}), 400
         
     try:
+        # Step 0: Validate URL - check if it exists and is reachable
+        url_valid, validation_result, validation_error = url_validator.validate_url(url)
+        
+        # If URL is unreachable, flag it as suspicious
+        if not url_valid:
+            is_suspicious_unreachable = url_validator.is_suspicious_unreachable(validation_result)
+            error_type = validation_result.get('error_type', 'UNKNOWN')
+            
+            # Extract features for analysis
+            features = extractor.extract_features(url)
+            
+            # If unreachable, treat as highly suspicious (potential phishing)
+            result = {
+                'url': url,
+                'is_phishing': True,  # Unreachable URLs are suspicious
+                'probability': 0.95,  # High probability of phishing if unreachable
+                'url_unreachable': True,
+                'url_validation_error': validation_error,
+                'url_error_type': error_type,
+                'url_exists': False,
+                'url_is_reachable': False,
+                'method': 'URL Validation (Unreachable)',
+                'alert': f'⚠️ URL is unreachable: {validation_error}',
+                'features': features
+            }
+            return jsonify(result)
+        
+        # URL is reachable, continue with normal checks
+        # Step 1: Check with SERQ API first for real-time reputation
+        serq_success, serq_result, serq_error = serq_client.check_url(url)
+        
+        # If SERQ API confirms it's legitimate (known good), return 100% confidence
+        if serq_success and serq_result and serq_result.get('is_legitimate') is True:
+            # SERQ confirmed it's legitimate - 100% confidence it's safe
+            result = {
+                'url': url,
+                'is_phishing': False,
+                'probability': 0.0,  # 0% phishing = 100% safe
+                'serq_verified': True,
+                'serq_legitimate': True,
+                'serq_confidence': serq_result.get('confidence', 1.0),
+                'method': 'SERQ API (Verified Legitimate)',
+                'url_exists': validation_result.get('exists', True),
+                'url_is_reachable': validation_result.get('is_reachable', True),
+                'features': extractor.extract_features(url)
+            }
+            return jsonify(result)
+        
+        # If SERQ API confirms it's malicious, return 100% phishing
+        if serq_success and serq_result and serq_result.get('is_malicious') is True:
+            result = {
+                'url': url,
+                'is_phishing': True,
+                'probability': 1.0,  # 100% phishing
+                'serq_verified': True,
+                'serq_malicious': True,
+                'serq_confidence': serq_result.get('confidence', 1.0),
+                'method': 'SERQ API (Verified Malicious)',
+                'url_exists': validation_result.get('exists', True),
+                'url_is_reachable': validation_result.get('is_reachable', True),
+                'features': extractor.extract_features(url)
+            }
+            return jsonify(result)
+        
+        # Step 2: If SERQ didn't provide definitive answer, use model prediction
         # Extract features
         features = extractor.extract_features(url)
         
         # Convert to DataFrame for prediction (expected by model)
         features_df = pd.DataFrame([features])
         
-        # Predict
+        # Predict using model
         prediction = phishing_model.predict(features_df)[0]
-        probability = phishing_model.predict_proba(features_df)[0][1] # Probability of class 1 (Phishing)
+        probability = phishing_model.predict_proba(features_df)[0][1]  # Probability of class 1 (Phishing)
+        
+        # Determine method used
+        method = 'ML Model'
+        if serq_success and serq_result:
+            method = 'ML Model (SERQ inconclusive)'
+        elif not serq_success:
+            method = f'ML Model (SERQ unavailable: {serq_error})'
         
         result = {
             'url': url,
             'is_phishing': bool(prediction),
             'probability': float(probability),
+            'method': method,
+            'serq_checked': serq_success,
+            'serq_error': serq_error if not serq_success else None,
+            'url_exists': validation_result.get('exists', True),
+            'url_is_reachable': validation_result.get('is_reachable', True),
+            'url_status_code': validation_result.get('status_code'),
             'features': features
         }
         

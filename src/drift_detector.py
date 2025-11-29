@@ -39,7 +39,7 @@ class DriftDetector:
 
         # Categorical features: Use Chi-Square Test
         # Note: Chi-Square requires contingency tables.
-        categorical_features = ['has_ip_address', 'https_token']
+        categorical_features = ['has_ip_address', 'https_token', 'is_suspicious_tld', 'has_suspicious_keyword']
         for feature in categorical_features:
             # Create contingency table
             # We need to ensure all categories are present in both

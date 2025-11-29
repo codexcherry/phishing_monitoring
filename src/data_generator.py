@@ -39,6 +39,8 @@ class PhishingDataGenerator:
         - num_special_chars: Count of special characters like @, -, _.
         - has_ip_address: Binary (0 or 1).
         - https_token: Binary (0 or 1).
+        - is_suspicious_tld: Binary (0 or 1) - indicates suspicious top-level domain.
+        - has_suspicious_keyword: Binary (0 or 1) - indicates presence of suspicious keywords.
         - is_phishing: Target variable (0: Legitimate, 1: Phishing).
         """
         
@@ -51,8 +53,8 @@ class PhishingDataGenerator:
         
         # Generate synthetic data
         # Base distributions for Legitimate (0) and Phishing (1)
-        # Legitimate: shorter URLs, fewer special chars, rarely IP, usually HTTPS
-        # Phishing: longer URLs, more special chars, sometimes IP, sometimes HTTPS (mimicry)
+        # Legitimate: shorter URLs, fewer special chars, rarely IP, usually HTTPS, rarely suspicious TLD/keywords
+        # Phishing: longer URLs, more special chars, sometimes IP, sometimes HTTPS, often suspicious TLD/keywords
         
         y = self.rng.choice([0, 1], size=n_samples, p=[0.7, 0.3]) # 30% phishing rate
         
@@ -60,6 +62,8 @@ class PhishingDataGenerator:
         num_special_chars = np.zeros(n_samples)
         has_ip_address = np.zeros(n_samples)
         https_token = np.zeros(n_samples)
+        is_suspicious_tld = np.zeros(n_samples)
+        has_suspicious_keyword = np.zeros(n_samples)
         
         for i in range(n_samples):
             if y[i] == 0: # Legitimate
@@ -67,11 +71,15 @@ class PhishingDataGenerator:
                 num_special_chars[i] = self.rng.poisson(lam=1)
                 has_ip_address[i] = 0 if self.rng.random() > 0.01 else 1
                 https_token[i] = 1 if self.rng.random() > 0.1 else 0 # Most have HTTPS
+                is_suspicious_tld[i] = 0 if self.rng.random() > 0.05 else 1 # Rarely suspicious TLD
+                has_suspicious_keyword[i] = 0 if self.rng.random() > 0.1 else 1 # Rarely suspicious keywords
             else: # Phishing
                 url_length[i] = self.rng.normal(loc=60, scale=15)
                 num_special_chars[i] = self.rng.poisson(lam=4)
                 has_ip_address[i] = 1 if self.rng.random() > 0.3 else 0
                 https_token[i] = 1 if self.rng.random() > 0.6 else 0 # Less likely to have valid HTTPS initially
+                is_suspicious_tld[i] = 1 if self.rng.random() > 0.4 else 0 # Often suspicious TLD
+                has_suspicious_keyword[i] = 1 if self.rng.random() > 0.3 else 0 # Often suspicious keywords
 
         # Apply Drift if requested
         if drift_type == 'concept_drift':
@@ -94,6 +102,8 @@ class PhishingDataGenerator:
             'num_special_chars': num_special_chars,
             'has_ip_address': has_ip_address,
             'https_token': https_token,
+            'is_suspicious_tld': is_suspicious_tld,
+            'has_suspicious_keyword': has_suspicious_keyword,
             'is_phishing': y
         })
         

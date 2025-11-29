@@ -77,16 +77,56 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 const isPhishing = data.is_phishing;
                 const prob = (data.probability * 100).toFixed(2);
+                const serqVerified = data.serq_verified || false;
+                const method = data.method || 'ML Model';
+                const urlUnreachable = data.url_unreachable || false;
+                const urlValidationError = data.url_validation_error || '';
+                const urlErrorType = data.url_error_type || '';
 
-                if (isPhishing) {
-                    predictionResult.textContent = `⚠️ PHISHING DETECTED (${prob}%)`;
+                let resultText = '';
+                let logMessage = '';
+
+                // Check if URL is unreachable - highest priority alert
+                if (urlUnreachable) {
+                    resultText = `🚨 ALERT: URL IS UNREACHABLE!\n`;
+                    resultText += `⚠️ ${urlValidationError}\n`;
+                    resultText += `🔴 HIGHLY SUSPICIOUS - Potential Phishing Site`;
                     predictionResult.style.color = '#ef4444';
-                    addLog(`🔍 Checked URL: ${url} -> PHISHING`, 'error');
+                    predictionResult.style.fontWeight = 'bold';
+                    logMessage = `🚨 ALERT: ${url} -> UNREACHABLE - SUSPICIOUS!`;
+                    addLog(logMessage, 'error');
+                    
+                    // Show additional alert
+                    alert(`⚠️ SECURITY ALERT!\n\nURL is unreachable or does not exist:\n${url}\n\nError: ${urlValidationError}\n\nThis is highly suspicious and may be a phishing attempt!`);
+                } else if (serqVerified) {
+                    // SERQ API verified the URL
+                    if (data.serq_legitimate) {
+                        resultText = `✅ SERQ VERIFIED: Legitimate URL (100% Safe)`;
+                        predictionResult.style.color = '#10b981';
+                        logMessage = `🔍 SERQ Verified: ${url} -> Legitimate (100% confidence)`;
+                        addLog(logMessage, 'success');
+                    } else if (data.serq_malicious) {
+                        resultText = `🚨 SERQ VERIFIED: PHISHING DETECTED (100%)`;
+                        predictionResult.style.color = '#ef4444';
+                        logMessage = `🔍 SERQ Verified: ${url} -> PHISHING (100% confidence)`;
+                        addLog(logMessage, 'error');
+                    }
                 } else {
-                    predictionResult.textContent = `✅ Legitimate URL (${(100 - prob).toFixed(2)}% Safe)`;
-                    predictionResult.style.color = '#10b981';
-                    addLog(`🔍 Checked URL: ${url} -> Safe`, 'success');
+                    // Using ML Model prediction
+                    if (isPhishing) {
+                        resultText = `⚠️ PHISHING DETECTED (${prob}%)`;
+                        predictionResult.style.color = '#ef4444';
+                        logMessage = `🔍 Checked URL: ${url} -> PHISHING`;
+                        addLog(logMessage, 'error');
+                    } else {
+                        resultText = `✅ Legitimate URL (${(100 - prob).toFixed(2)}% Safe)`;
+                        predictionResult.style.color = '#10b981';
+                        logMessage = `🔍 Checked URL: ${url} -> Safe`;
+                        addLog(logMessage, 'success');
+                    }
                 }
+
+                predictionResult.textContent = resultText;
             }
         } catch (err) {
             predictionResult.textContent = `Network Error: ${err.message}`;
